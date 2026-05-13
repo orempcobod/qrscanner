@@ -34,16 +34,19 @@ body{
 
 <script>
 
-const GAS_URL =
-"https://script.google.com/macros/s/AKfycbzGDLBruso5mFKWuJAXyl08YhK5NOjHuM97lHfM1v_OrYx8asFpMwKRyWhNs_GR0KjJLA/exec";
 
 function onScanSuccess(decodedText){
 
-    window.location.href =
-    GAS_URL +
-    "?qr=" +
-    encodeURIComponent(decodedText);
+    if(window.opener){
 
+        window.opener.postMessage({
+
+            type:"QR_RESULT",
+            value:decodedText
+
+        }, "*");
+    }
+       window.close();
 }
 
 const html5QrCode = new Html5Qrcode("reader");
