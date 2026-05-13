@@ -28,7 +28,7 @@ body{
 <body>
 
 <h2>Scan Fuel Slip QR</h2>
-
+<div id="camera">   </div>
 <div id="reader"></div>
 
 <script>
@@ -54,7 +54,7 @@ new Html5Qrcode("reader");
 
 Html5Qrcode.getCameras()
 .then(cameras => {
-
+   $('#camera').html(cameras.length);
     if(cameras.length){
 
         html5QrCode.start(
