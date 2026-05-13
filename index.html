@@ -17,7 +17,7 @@ body{
 }
 
 #reader{
-    width:350px;
+    width:320px;
     margin:auto;
 }
 
@@ -29,40 +29,51 @@ body{
 
 <h2>Scan Fuel Slip QR</h2>
 
-<div id="camera"></div>
 <div id="reader"></div>
 
 <script>
 
-const GAS_URL =
-"https://script.google.com/macros/s/AKfycbzGDLBruso5mFKWuJAXyl08YhK5NOjHuM97lHfM1v_OrYx8asFpMwKRyWhNs_GR0KjJLA/exec";
-
 function onScanSuccess(decodedText){
 
-    window.location.href =
-    GAS_URL +
-    "?qr=" +
-    encodeURIComponent(decodedText);
+    /*
+    SEND RESULT TO MAIN WINDOW
+    */
+
+    if(window.opener){
+
+        window.opener.postMessage({
+
+            type:"QR_RESULT",
+            value:decodedText
+
+        }, "*");
+
+    }
+
+    /*
+    CLOSE SCANNER
+    */
+
+    window.close();
 
 }
 
-const html5QrCode = new Html5Qrcode("reader");
+const html5QrCode =
+new Html5Qrcode("reader");
 
-Html5Qrcode.getCameras()
+Html5Qrcode
+.getCameras()
 .then(cameras => {
 
-    document.getElementById("camera").innerHTML =
-        "Cameras found: " + cameras.length;
-
-    if (cameras.length) {
+    if(cameras.length){
 
         html5QrCode.start(
 
-            { facingMode: "environment" },   // ✅ BACK CAMERA FIX
+            cameras[0].id,
 
             {
-                fps: 10,
-                qrbox: 250
+                fps:10,
+                qrbox:250
             },
 
             onScanSuccess
@@ -73,7 +84,9 @@ Html5Qrcode.getCameras()
 
 })
 .catch(err => {
-    console.log(err);
+
+    alert(err);
+
 });
 
 </script>
