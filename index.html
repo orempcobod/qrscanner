@@ -3,22 +3,26 @@
 
 <head>
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 
 body{
-    font-family:Arial;
-    text-align:center;
-    padding:20px;
+    font-family: Arial;
+    text-align: center;
+    padding: 20px;
 }
 
 #reader{
-    width:350px;
-    margin:auto;
+    width: 350px;
+    margin: auto;
+}
+
+#status{
+    margin: 10px;
+    font-weight: bold;
 }
 
 </style>
@@ -29,54 +33,96 @@ body{
 
 <h2>Scan Fuel Slip QR</h2>
 
-<div id="camera"></div>
+<div id="status">Starting camera...</div>
 <div id="reader"></div>
 
 <script>
 
+let scannerStarted = false;
 
-function onScanSuccess(decodedText){
+/*
+SEND RESULT BACK TO MAIN APP
+*/
+function sendResult(decodedText){
 
     if(window.opener){
 
         window.opener.postMessage({
-
-            type:"QR_RESULT",
-            value:decodedText
-
+            type: "QR_RESULT",
+            value: decodedText
         }, "*");
+
     }
-       window.close();
+
+    // small delay before close (IMPORTANT STABILITY FIX)
+    setTimeout(() => {
+        window.close();
+    }, 300);
+
 }
 
+/*
+SCAN SUCCESS
+*/
+function onScanSuccess(decodedText){
+
+    if(scannerStarted === false) return;
+
+    document.getElementById("status").innerText =
+        "Scanned: " + decodedText;
+
+    sendResult(decodedText);
+
+}
+
+/*
+START CAMERA
+*/
 const html5QrCode = new Html5Qrcode("reader");
 
 Html5Qrcode.getCameras()
 .then(cameras => {
 
-    document.getElementById("camera").innerHTML =
-        "Cameras found: " + cameras.length;
-
-    if (cameras.length) {
-
-        html5QrCode.start(
-
-            { facingMode: "environment" },   // ✅ BACK CAMERA FIX
-
-            {
-                fps: 10,
-                qrbox: 250
-            },
-
-            onScanSuccess
-
-        );
-
+    if(!cameras || cameras.length === 0){
+        document.getElementById("status").innerText =
+            "No camera found";
+        return;
     }
+
+    document.getElementById("status").innerText =
+        "Camera ready...";
+
+    let cameraId = cameras[0].id;
+
+    // FORCE BACK CAMERA
+    for(let i = 0; i < cameras.length; i++){
+
+        const label = (cameras[i].label || "").toLowerCase();
+
+        if(label.includes("back") ||
+           label.includes("rear") ||
+           label.includes("environment")){
+
+            cameraId = cameras[i].id;
+            break;
+        }
+    }
+
+    html5QrCode.start(
+        cameraId,
+        {
+            fps: 10,
+            qrbox: 250
+        },
+        onScanSuccess
+    ).then(() => {
+        scannerStarted = true;
+    });
 
 })
 .catch(err => {
-    console.log(err);
+    document.getElementById("status").innerText =
+        "Camera error: " + err;
 });
 
 </script>
