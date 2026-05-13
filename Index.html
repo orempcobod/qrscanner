@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+body{
+    font-family:Arial;
+    text-align:center;
+    padding:20px;
+}
+
+#reader{
+    width:350px;
+    margin:auto;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Scan Fuel Slip QR</h2>
+
+<div id="reader"></div>
+
+<script>
+
+const GAS_URL =
+"https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
+
+function onScanSuccess(decodedText){
+
+    /*
+    RETURN TO GAS
+    */
+
+    window.location.href =
+    GAS_URL +
+    "?qr=" +
+    encodeURIComponent(decodedText);
+
+}
+
+const html5QrCode =
+new Html5Qrcode("reader");
+
+Html5Qrcode.getCameras()
+.then(cameras => {
+
+    if(cameras.length){
+
+        html5QrCode.start(
+
+            cameras[0].id,
+
+            {
+                fps:10,
+                qrbox:250
+            },
+
+            onScanSuccess
+
+        );
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
