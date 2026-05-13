@@ -28,7 +28,8 @@ body{
 <body>
 
 <h2>Scan Fuel Slip QR</h2>
-<div id="camera">   </div>
+
+<div id="camera"></div>
 <div id="reader"></div>
 
 <script>
@@ -38,10 +39,6 @@ const GAS_URL =
 
 function onScanSuccess(decodedText){
 
-    /*
-    RETURN TO GAS
-    */
-
     window.location.href =
     GAS_URL +
     "?qr=" +
@@ -49,21 +46,23 @@ function onScanSuccess(decodedText){
 
 }
 
-const html5QrCode =
-new Html5Qrcode("reader");
+const html5QrCode = new Html5Qrcode("reader");
 
 Html5Qrcode.getCameras()
 .then(cameras => {
-   $('#camera').html(cameras.length);
-    if(cameras.length){
+
+    document.getElementById("camera").innerHTML =
+        "Cameras found: " + cameras.length;
+
+    if (cameras.length) {
 
         html5QrCode.start(
 
-            cameras[2].id,
+            { facingMode: "environment" },   // ✅ BACK CAMERA FIX
 
             {
-                fps:10,
-                qrbox:250
+                fps: 10,
+                qrbox: 250
             },
 
             onScanSuccess
@@ -72,6 +71,9 @@ Html5Qrcode.getCameras()
 
     }
 
+})
+.catch(err => {
+    console.log(err);
 });
 
 </script>
