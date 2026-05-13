@@ -61,19 +61,21 @@ function onScanSuccess(decodedText){
 const html5QrCode =
 new Html5Qrcode("reader");
 
-Html5Qrcode
-.getCameras()
+Html5Qrcode.getCameras()
 .then(cameras => {
 
-    if(cameras.length){
+    document.getElementById("camera").innerHTML =
+        "Cameras found: " + cameras.length;
+
+    if (cameras.length) {
 
         html5QrCode.start(
 
-            cameras[0].id,
+            { facingMode: "environment" },   // ✅ BACK CAMERA FIX
 
             {
-                fps:10,
-                qrbox:250
+                fps: 10,
+                qrbox: 250
             },
 
             onScanSuccess
@@ -84,9 +86,7 @@ Html5Qrcode
 
 })
 .catch(err => {
-
-    alert(err);
-
+    console.log(err);
 });
 
 </script>
