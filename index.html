@@ -3,26 +3,22 @@
 
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 
 body{
-    font-family: Arial;
-    text-align: center;
-    padding: 20px;
+    font-family:Arial;
+    text-align:center;
+    padding:20px;
 }
 
 #reader{
-    width: 350px;
-    margin: auto;
-}
-
-#status{
-    margin-top: 10px;
-    font-weight: bold;
+    width:350px;
+    margin:auto;
 }
 
 </style>
@@ -33,72 +29,36 @@ body{
 
 <h2>Scan Fuel Slip QR</h2>
 
-<div id="status">Initializing camera...</div>
+<div id="camera"></div>
 <div id="reader"></div>
 
 <script>
 
-/*
-SEND RESULT BACK TO GAS WINDOW
-*/
-function sendToParent(decodedText){
+const GAS_URL =
+"https://script.google.com/macros/s/AKfycbzGDLBruso5mFKWuJAXyl08YhK5NOjHuM97lHfM1v_OrYx8asFpMwKRyWhNs_GR0KjJLA/exec";
 
-    if(window.opener){
-
-        window.opener.postMessage({
-            type: "QR_RESULT",
-            value: decodedText
-        }, "*");
-
-    }
-
-    window.close(); // close scanner
-}
-
-/*
-ON SCAN SUCCESS
-*/
 function onScanSuccess(decodedText){
 
-    document.getElementById("status").innerText =
-        "QR Detected: " + decodedText;
-
-    sendToParent(decodedText);
+    window.location.href =
+    GAS_URL +
+    "?qr=" +
+    encodeURIComponent(decodedText);
 
 }
 
-/*
-INIT CAMERA (BACK CAMERA FORCE)
-*/
 const html5QrCode = new Html5Qrcode("reader");
 
 Html5Qrcode.getCameras()
 .then(cameras => {
 
-    if(cameras && cameras.length){
+    document.getElementById("camera").innerHTML =
+        "Cameras found: " + cameras.length;
 
-        document.getElementById("status").innerText =
-            "Camera ready. Starting back camera...";
-
-        // Try to find back camera
-        let backCamera = cameras[0].id;
-
-        for(let i = 0; i < cameras.length; i++){
-
-            let label = cameras[i].label.toLowerCase();
-
-            if(label.includes("back") ||
-               label.includes("rear") ||
-               label.includes("environment")){
-
-                backCamera = cameras[i].id;
-                break;
-            }
-        }
+    if (cameras.length) {
 
         html5QrCode.start(
 
-            backCamera,
+            { facingMode: "environment" },   // ✅ BACK CAMERA FIX
 
             {
                 fps: 10,
@@ -109,21 +69,11 @@ Html5Qrcode.getCameras()
 
         );
 
-    } else {
-
-        document.getElementById("status").innerText =
-            "No camera found";
-
     }
 
 })
 .catch(err => {
-
-    document.getElementById("status").innerText =
-        "Camera error: " + err;
-
     console.log(err);
-
 });
 
 </script>
