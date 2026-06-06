@@ -1,408 +1,85 @@
-<!--DOCTYPE html>
-<html>
-
-<head>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://unpkg.com/html5-qrcode"></script>
-
-<style>
-
-body{
-    font-family: Arial;
-    text-align: center;
-    padding: 20px;
-}
-
-#reader{
-    width: 350px;
-    margin: auto;
-}
-
-#status{
-    margin: 10px;
-    font-weight: bold;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<h2>Scan Fuel Slip QR</h2>
-
-<div id="status">Starting camera...</div>
-<div id="reader"></div>
-
-<script>
-
-let scannerStarted = false;
-
-/*
-SEND RESULT BACK TO MAIN APP
-*/
-function sendResult(decodedText){
-
-    if(window.opener){
-
-        window.opener.postMessage({
-            type: "QR_RESULT",
-            value: decodedText
-        }, "*");
-
-    }
-
-    // small delay before close (IMPORTANT STABILITY FIX)
-    setTimeout(() => {
-        window.close();
-    }, 300);
-
-}
-
-/*
-SCAN SUCCESS
-*/
-function onScanSuccess(decodedText){
-
-    if(scannerStarted === false) return;
-
-    document.getElementById("status").innerText =
-        "Scanned: " + decodedText;
-
-    sendResult(decodedText);
-
-}
-
-/*
-START CAMERA
-*/
-const html5QrCode = new Html5Qrcode("reader");
-
-Html5Qrcode.getCameras()
-.then(cameras => {
-
-    if(!cameras || cameras.length === 0){
-        document.getElementById("status").innerText =
-            "No camera found";
-        return;
-    }
-
-    document.getElementById("status").innerText =
-        "Camera ready...";
-
-    let cameraId = cameras[0].id;
-
-    // FORCE BACK CAMERA
-    for(let i = 0; i < cameras.length; i++){
-
-        const label = (cameras[i].label || "").toLowerCase();
-
-        if(label.includes("back") ||
-           label.includes("rear") ||
-           label.includes("environment")){
-
-            cameraId = cameras[i].id;
-            break;
-        }
-    }
-
-    html5QrCode.start(
-        cameraId,
-        {
-            fps: 10,
-            qrbox: 250
-        },
-        onScanSuccess
-    ).then(() => {
-        scannerStarted = true;
-    });
-
-})
-.catch(err => {
-    document.getElementById("status").innerText =
-        "Camera error: " + err;
-});
-
-</script>
-
-</body>
-</html-->
-
 <!DOCTYPE html>
 <html>
-
 <head>
-
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
-
-<script src="https://unpkg.com/html5-qrcode"></script>
-
-<style>
-
-body{
-    font-family:Arial;
-    text-align:center;
-    padding:20px;
-    background:#f5f5f5;
-}
-
-#reader{
-    width:100%;
-    max-width:350px;
-    margin:auto;
-}
-
-video{
-    width:100%;
-    max-width:350px;
-    border-radius:10px;
-}
-
-canvas{
-    display:none;
-}
-
-button{
-    padding:12px;
-    margin-top:10px;
-    width:100%;
-    max-width:350px;
-    border:none;
-    background:#1976d2;
-    color:white;
-    border-radius:8px;
-    font-size:16px;
-}
-
-img{
-    width:100%;
-    max-width:350px;
-    margin-top:10px;
-    border-radius:10px;
-}
-
-</style>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #reader {
+            width: 350px;
+            margin: auto;
+        }
+        #status {
+            margin: 10px;
+            font-weight: bold;
+        }
+    </style>
 </head>
-
 <body>
 
-<h2 id="title"></h2>
+    <h2>Scan Fuel Slip QR</h2>
+    <div id="status">Starting camera...</div>
+    <div id="reader"></div>
 
-<!-- QR -->
-<div id="reader"></div>
+    <script>
+        let scannerStarted = false;
 
-<!-- PHOTO -->
-<video id="camera"
-       autoplay
-       playsinline
-       style="display:none;">
-</video>
-
-<canvas id="canvas"></canvas>
-
-<button
-    id="captureBtn"
-    style="display:none;">
-
-    Capture Receipt
-
-</button>
-
-<img id="preview"
-     style="display:none;">
-
-<script>
-
-const params =
-new URLSearchParams(window.location.search);
-
-const mode =
-params.get("mode");
-
-const title =
-document.getElementById("title");
-
-/* =====================================
-   QR MODE
-===================================== */
-
-if(mode === "qr"){
-
-    title.innerText =
-    "Scan QR Code";
-
-    startQrScanner();
-}
-
-/* =====================================
-   PHOTO MODE
-===================================== */
-
-if(mode === "photo"){
-
-    title.innerText =
-    "Capture Receipt";
-
-    startCamera();
-}
-
-/* =====================================
-   QR SCANNER
-===================================== */
-
-function startQrScanner(){
-
-    const html5QrCode =
-    new Html5Qrcode("reader");
-
-    Html5Qrcode.getCameras()
-
-    .then(cameras => {
-
-        if(cameras.length){
-
-            html5QrCode.start(
-
-                {
-                    facingMode:"environment"
-                },
-
-                {
-                    fps:10,
-                    qrbox:250
-                },
-
-                function(decodedText){
-
-                    if(window.opener){
-
-                        window.opener.postMessage({
-
-                            type:"QR_RESULT",
-                            value:decodedText
-
-                        }, "*");
-                    }
-
-                    html5QrCode.stop();
-
-                    window.close();
-                }
-            );
+        /* Send result back to main app */
+        function sendResult(decodedText) {
+            if (window.opener) {
+                window.opener.postMessage({ type: "qr_result", value: decodedText }, "*");
+            }
+            // Small delay before close (important stability fix)
+            setTimeout(() => {
+                window.close();
+            }, 300);
         }
 
-    })
+        /* Scan success */
+        function onScanSuccess(decodedText) {
+            if (scannerStarted === false) return;
+            document.getElementById("status").innerText = "Scanned: " + decodedText;
+            sendResult(decodedText);
+        }
 
-    .catch(err => {
-
-        alert(err);
-
-    });
-}
-
-/* =====================================
-   CAMERA
-===================================== */
-
-async function startCamera(){
-
-    const video =
-    document.getElementById("camera");
-
-    const btn =
-    document.getElementById("captureBtn");
-
-    video.style.display =
-    "block";
-
-    btn.style.display =
-    "block";
-
-    try{
-
-        const stream =
-        await navigator.mediaDevices.getUserMedia({
-
-            video:{
-                facingMode:{
-                    ideal:"environment"
+        /* Start camera */
+        const html5Qrcode = new Html5Qrcode("reader");
+        
+        html5Qrcode.getCameras()
+            .then(cameras => {
+                if (!cameras || cameras.length === 0) {
+                    document.getElementById("status").innerText = "No camera found";
+                    return;
                 }
-            },
-
-            audio:false
-        });
-
-        video.srcObject =
-        stream;
-
-    }
-
-    catch(err){
-
-        alert(
-            "Camera Permission Denied"
-        );
-
-        console.log(err);
-    }
-}
-
-/* =====================================
-   CAPTURE PHOTO
-===================================== */
-
-document
-.getElementById("captureBtn")
-.addEventListener("click", function(){
-
-    const video =
-    document.getElementById("camera");
-
-    const canvas =
-    document.getElementById("canvas");
-
-    const ctx =
-    canvas.getContext("2d");
-
-    canvas.width =
-    video.videoWidth;
-
-    canvas.height =
-    video.videoHeight;
-
-    ctx.drawImage(
-        video,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    const base64 =
-    canvas.toDataURL(
-        "image/jpeg",
-        0.7
-    );
-
-    if(window.opener){
-
-        window.opener.postMessage({
-
-            type:"PHOTO_RESULT",
-            value:base64
-
-        }, "*");
-    }
-
-    window.close();
-
-});
-
-</script>
-
+                
+                document.getElementById("status").innerText = "Camera ready...";
+                let cameraId = cameras[0].id;
+                
+                // Force back camera
+                for (let i = 0; i < cameras.length; i++) {
+                    const label = (cameras[i].label || "").toLowerCase();
+                    if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
+                        cameraId = cameras[i].id;
+                        break;
+                    }
+                }
+                
+                html5Qrcode.start(
+                    cameraId, 
+                    { fps: 10, qrbox: 250 }, 
+                    onScanSuccess
+                ).then(() => {
+                    scannerStarted = true;
+                });
+            })
+            .catch(err => {
+                document.getElementById("status").innerText = "Camera error: " + err;
+                console.error(err);
+            });
+    </script>
 </body>
 </html>
